@@ -1,4 +1,4 @@
-#!/home/alex/python-2.2.3/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ##
 # MIT Licence Copyright (c) 2013 Alexandre Henriet <alex.henriet@gmail.com>
