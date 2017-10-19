@@ -1,0 +1,101 @@
+#!/usr/bin/env php
+<?php
+/*
+ * ##
+ * # MIT Licence Copyright (c) 2017 Alexandre Henriet <alex.henriet@gmail.com>
+ * #
+ * # Permission is hereby granted, free of charge, to any person obtaining a
+ * # copy of this software and associated documentation files (the "Software"),
+ * # to deal in the Software without restriction, including without limitation
+ * # the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * # and/or sell copies of the Software, and to permit persons to whom the
+ * # Software is furnished to do so, subject to the following conditions:
+ * #
+ * # The above copyright notice and this permission notice shall be included
+ * # in all copies or substantial portions of the Software.
+ * #
+ * # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * # THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * # OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * # ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ * # OTHER DEALINGS IN THE SOFTWARE.
+ * ##
+ * # Syntax: mdump path/to/app/config/parameters_$env.yml
+ * ##
+ */
+
+$mysqlDumpBin = '/usr/bin/mysqldump';
+if (!isset($argv[1])) {
+  exitError('No parameters.yml provided.');
+}
+if (false === $configFile = realpath($argv[1])) {
+  exitError('File ' . $argv[1] . ' does not exists.');
+}
+$config = file_get_contents($configFile);
+
+try {
+  $databaseDriver = getParameter('database_driver', $config);
+  if ('pdo_mysql' !== $databaseDriver) {
+    exitError('Script only supports pdo_mysql.');
+  }
+  $name = getParameter('database_name', $config);
+  $host = getParameter('database_host', $config);
+  $port = getParameter('database_port', $config);
+  $user = getParameter('database_user', $config);
+  $pass = getParameter('database_password', $config);
+  $env = guessEnvironment($configFile);
+  $dumpName = $name . '_' . $env . '_' . getTimestamp() . '.sql';
+  if (is_file($dumpName)) {
+    exitError('File ' . $dumpName . ' already exists.');
+  }
+  if (!touch ($dumpName)) {
+    exitError('Cannot create file ' . $dumpName);
+  }
+  unlink($dumpName);
+  putlog('Generating dump file "' . $dumpName . '".');
+  $cmd = sprintf($mysqlDumpBin . ' --skip-lock-tables -h%s -P%s -u%s -p%s %s > %s', $host, $port, $user, $pass, $name, $dumpName);
+  exec($cmd, $out, $ret);
+  if (0 !== $ret) {
+    exitError('Dump generation failed');
+  }
+  putlog('File path: ' . realpath($dumpName));
+  putlog('File size: ' . humanReadableSize(filesize($dumpName)));
+  exit(0);
+} catch(\Exception $e) {
+    exitError($e->getMessage());
+}
+
+function getParameter($key, $config) {
+  $pattern = '/' . $key . ':(.*)/i';
+  if (!preg_match($pattern, $config, $matches)) {
+    throw new \Exception('Key "'. $key . '" not found.');
+  }
+  return trim($matches[1]);
+}
+
+function exitError($msg) {
+  printf('Error: ' . $msg . PHP_EOL);
+  exit(1);
+}
+
+function guessEnvironment($file) {
+  if (!preg_match('/parameters_(.+)\.yml/', basename($file), $matches)) {
+    return 'undef';
+  } 
+  return $matches[1];
+}
+
+function getTimestamp() {
+  return date('Ymdhis');
+}
+
+function putlog($msg) {
+  printf('[%s] %s' . PHP_EOL, date('Y-m-d H:i:s'), $msg);
+}
+
+function humanReadableSize($size) {
+  $unit = ['b', 'kb', 'mb', 'gb', 'tb', 'pb'];
+  return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
+}
