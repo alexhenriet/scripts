@@ -104,7 +104,7 @@ if ! [ -e "$APACHE_TARGET/bin/httpd" ]; then
   FOLDER=`basename $ARCHIVE .tar.bz2`
   tar jxf $ARCHIVE
   cd $FOLDER
-  ./configure --prefix=$APACHE_TARGET --localstatedir=$VAR_TARGET --with-apr=$LIBS_TARGET --with-apr-util=$LIBS_TARGET --with-pcre=$LIBS_TARGET --with-ssl=$LIBS_TARGET --with-z=$LIBS_TARGET --enable-ssl --enable-rewrite --enable-so --enable-shared --enable-mime-magic --enable-expires --enable-deflate --enable-mpms-shared
+  ./configure --prefix=$APACHE_TARGET --localstatedir=$VAR_TARGET --with-apr=$LIBS_TARGET --with-apr-util=$LIBS_TARGET --with-pcre=$LIBS_TARGET --with-ssl=$LIBS_TARGET --with-z=$LIBS_TARGET --with-port=8000 --enable-ssl --enable-rewrite --enable-so --enable-shared --enable-mime-magic --enable-expires --enable-deflate --enable-mpms-shared
   make && make install
   cd ..
 fi
