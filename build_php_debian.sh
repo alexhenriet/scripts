@@ -52,10 +52,10 @@ printf "Building PHP %s\\n" "$PHP_VERSION"
 export CFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 export CXXFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
-#make clean
-#./configure --prefix="$PHP_TARGET" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
-#make || exit 1 
-#make install || exit 1
+make clean
+./configure --prefix="$PHP_TARGET" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --ith-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
+make || exit 1 
+make install || exit 1
 cd "$BUILD_PATH" || exit 1
 
 if ! [ -e "$PHP_TARGET/etc/php-fpm.conf" ]; then
@@ -72,6 +72,3 @@ if ! [ -e "$PHP_TARGET/etc/php-fpm.d/www.conf" ]; then
     sed -i "s,\\[www\\],[www-$PHP_VERSION]," "$PHP_TARGET/etc/php-fpm.d/www.conf"
   fi
 fi
-
-
-#
