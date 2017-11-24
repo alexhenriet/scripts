@@ -26,9 +26,9 @@ if [ ! "${#PHP_VERSION}" = "$(expr "$PHP_VERSION" : "^[0-9]\\.[0-9]\\.[0-9]*$")"
 fi
 
 PHP_TARGET="$HOME/php-$PHP_VERSION"
-if [ -d "$PHP_TARGET" ]; then
-  printf "Error: PHP version %s already installed\\n" "$PHP_TARGET" || exit 1
-fi
+#if [ -d "$PHP_TARGET" ]; then
+#  printf "Error: PHP version %s already installed\\n" "$PHP_TARGET" || exit 1
+#fi
 
 PHP_URL="http://be2.php.net/distributions/php-$PHP_VERSION.tar.bz2"
 if [ ! -d "$BUILD_PATH" ]; then
@@ -52,19 +52,26 @@ printf "Building PHP %s\\n" "$PHP_VERSION"
 export CFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 export CXXFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
-make clean
-./configure --prefix="$PHP_TARGET" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
-make || exit 1 
-make install || exit 1
+#make clean
+#./configure --prefix="$PHP_TARGET" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
+#make || exit 1 
+#make install || exit 1
 cd "$BUILD_PATH" || exit 1
 
 if ! [ -e "$PHP_TARGET/etc/php-fpm.conf" ]; then
-  cp "$PHP_TARGET/etc/php-fpm.conf.default" "$PHP_TARGET/etc/php-fpm.conf"
+  if [ -e "$PHP_TARGET/etc/php-fpm.conf.default" ]; then
+    cp "$PHP_TARGET/etc/php-fpm.conf.default" "$PHP_TARGET/etc/php-fpm.conf"
+    sed -i "s,\\[www\\],[www-$PHP_VERSION]," "$PHP_TARGET/etc/php-fpm.conf"
+  fi
 fi
 
 if ! [ -e "$PHP_TARGET/etc/php-fpm.d/www.conf" ]; then
-  cp "$PHP_TARGET/etc/php-fpm.d/www.conf.default" "$PHP_TARGET/etc/php-fpm.d/www.conf"
+  if [ -e "$PHP_TARGET/etc/php-fpm.d/www.conf.default" ]; then
+    cp "$PHP_TARGET/etc/php-fpm.d/www.conf.default" "$PHP_TARGET/etc/php-fpm.d/www.conf"
+    sed -i "s,listen = 127.0.0.1:9000,listen = $PHP_TARGET/php-fpm-$PHP_VERSION.sock,g" "$PHP_TARGET/etc/php-fpm.d/www.conf"
+    sed -i "s,\\[www\\],[www-$PHP_VERSION]," "$PHP_TARGET/etc/php-fpm.d/www.conf"
+  fi
 fi
 
-sed -i "s,listen = 127.0.0.1:9000,listen = $PHP_TARGET/php-fpm-$PHP_VERSION.sock,g" "$PHP_TARGET/etc/php-fpm.d/www.conf"
-sed -i "s,\\[www\\],[www-$PHP_VERSION]," "$PHP_TARGET/etc/php-fpm.d/www.conf"
+
+#
