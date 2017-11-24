@@ -27,7 +27,7 @@ if [ ! "${#PHP_VERSION}" = "$(expr "$PHP_VERSION" : "^[0-9]\\.[0-9]\\.[0-9]*$")"
 fi
 
 PHP_TARGET="$HOME/php-$PHP_VERSION"
-if [ -d "$PHP_TARGET" ]; then
+if [ -e "$PHP_TARGET/bin/php" ]; then
   printf "Error: PHP version %s already installed at %s\\n" "$PHP_VERSION" "$PHP_TARGET" && exit 1
 fi
 
@@ -54,10 +54,14 @@ export CFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 export CXXFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
 make clean
-./configure --prefix="$PHP_TARGET" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
+./configure --prefix="$PHP_TARGET" --with-config-file-path="$PHP_TARGET/etc" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
 make || exit 1 
 make install || exit 1
 cd "$BUILD_PATH" || exit 1
+
+if ! [ -e "$PHP_TARGET/etc/php.ini" ]; then
+  cp "$BUILD_PATH/php.ini-production" "$PHP_TARGET/etc/php.ini"
+fi
 
 if ! [ -e "$PHP_TARGET/etc/php-fpm.conf" ]; then
   if [ -e "$PHP_TARGET/etc/php-fpm.conf.default" ]; then
