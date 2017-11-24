@@ -26,9 +26,9 @@ if [ ! "${#PHP_VERSION}" = "$(expr "$PHP_VERSION" : "^[0-9]\\.[0-9]\\.[0-9]*$")"
 fi
 
 PHP_TARGET="$HOME/php-$PHP_VERSION"
-#if [ -d "$PHP_TARGET" ]; then
-#  printf "Error: PHP version %s already installed\\n" "$PHP_TARGET" || exit 1
-#fi
+if [ -d "$PHP_TARGET" ]; then
+  printf "Error: PHP version %s already installed\\n" "$PHP_TARGET" || exit 1
+fi
 
 PHP_URL="http://be2.php.net/distributions/php-$PHP_VERSION.tar.bz2"
 if [ ! -d "$BUILD_PATH" ]; then
