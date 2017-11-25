@@ -1,6 +1,5 @@
 #!/bin/sh
 # validated against https://www.shellcheck.net/
-set -o posix
 
 BUILD_PATH="$HOME/httpd-build"
 VAR_PATH="$HOME/var"
@@ -58,7 +57,9 @@ if [ -e "$HTTPD_TARGET/conf/httpd.conf" ]; then
     sed -i "s,#Include conf/extra/httpd-vhosts.conf,Include conf/extra/httpd-vhosts.conf," "$HTTPD_TARGET/conf/httpd.conf"
     sed -i "s,#LoadModule proxy_module modules/mod_proxy.so,LoadModule proxy_module modules/mod_proxy.so," "$HTTPD_TARGET/conf/httpd.conf"
     sed -i "s,#LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so,LoadModule proxy_fcgi_module modules/mod_proxy_fcgi.so," "$HTTPD_TARGET/conf/httpd.conf"
-    sed -i "s,DirectoryIndex index.html,DirectoryIndex /index.php index.php index.html," "$HTTPD_TARGET/conf/httpd.conf"
+    sed -i "s,#LoadModule rewrite_module modules/mod_rewrite.so,LoadModule rewrite_module modules/mod_rewrite.so," "$HTTPD_TARGET/conf/httpd.conf"
+    sed -i "s,#LoadModule deflate_module modules/mod_deflate.so,LoadModule deflate_module modules/mod_deflate.so," "$HTTPD_TARGET/conf/httpd.conf"
+    sed -i "s,DirectoryIndex index.html,DirectoryIndex index.php index.html," "$HTTPD_TARGET/conf/httpd.conf"
 fi
 
 if [ ! -e "$HOME/www/dummy/web/index.php" ]; then
@@ -66,4 +67,25 @@ if [ ! -e "$HOME/www/dummy/web/index.php" ]; then
     mkdir -p "$HOME/www/dummy/web"
   fi
   printf "<?php\nphpinfo();" > "$HOME/www/dummy/web/index.php"
+fi
+
+if [ -e "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf" ]; then
+  TIMESTAMP="$(date +%s)"
+  cp "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf" "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf.$TIMESTAMP"
+  cat > "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf" << EOF
+Listen 8000
+<VirtualHost *:8000>
+    DocumentRoot "$HOME/www/dummy/web/"
+    ProxyPassMatch ^/(.*\.php(/.*)?)$ unix://$HOME/var/php-fpm-7.1.12.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    #ProxyPassMatch ^/(.*\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.6.31.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    #ProxyPassMatch ^/(.*\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.4.45.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    <Directory $HOME/www/dummy/web/>
+      Options Indexes FollowSymLinks MultiViews
+      AllowOverride all 
+      Require all granted
+    </Directory>
+    ErrorLog "$HOME/var/logs/dummy-error_log"
+    CustomLog "$HOME/var/logs/dummy-access_log" common
+</VirtualHost>
+EOF
 fi
