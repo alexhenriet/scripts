@@ -1,7 +1,7 @@
 #!/bin/sh
 # validated against https://www.shellcheck.net/
-set -o posix
 
+DEFAULT_PHP_VERSION="7.1.12"
 BUILD_PATH="$HOME/httpd-build"
 VAR_PATH="$HOME/var"
 MYSQL_SOCK_PATH="/var/run/mysqld/mysqld.sock"
@@ -20,10 +20,21 @@ if [ "${#MISSING_PACKAGES}" -ne 0 ]; then
 fi
 
 # Script
-printf "PHP Version? (i.e.: 7.1.12)\\n"
+if [ ! -d "$BUILD_PATH" ]; then
+  mkdir "$BUILD_PATH" || exit 1
+fi
+cd "$BUILD_PATH" || exit 1
+#SRC_FOLDERS=$(ls -d php-*/ 2>/dev/null|tr "\\n" ' ') # Replaced for shellcheck
+SRC_FOLDERS="$(find . -maxdepth 1 -type d -name 'php-*' -printf '%P ')"
+printf "PHP sources in BUILD_PATH (%s): %s\\n" "$BUILD_PATH" "$SRC_FOLDERS"
+printf "PHP version to install (%s): " "$DEFAULT_PHP_VERSION"
 read -r PHP_VERSION
-if [ ! "${#PHP_VERSION}" = "$(expr "$PHP_VERSION" : "^[0-9]\\.[0-9]\\.[0-9]*$")" ]; then
-  printf "Error: invalid PHP version\\n" && exit 1
+if [ "${#PHP_VERSION}" -eq 0 ]; then
+  PHP_VERSION="$DEFAULT_PHP_VERSION"
+else
+  if [ ! "${#PHP_VERSION}" = "$(expr "$PHP_VERSION" : "^[0-9]\\.[0-9]\\.[0-9]*$")" ]; then
+    printf "Error: invalid PHP version\\n" && exit 1
+  fi
 fi
 
 PHP_TARGET="$HOME/php-$PHP_VERSION"
@@ -32,10 +43,6 @@ if [ -e "$PHP_TARGET/bin/php" ]; then
 fi
 
 PHP_URL="http://be2.php.net/distributions/php-$PHP_VERSION.tar.bz2"
-if [ ! -d "$BUILD_PATH" ]; then
-  mkdir "$BUILD_PATH" || exit 1
-fi
-cd "$BUILD_PATH" || exit 1
 ARCHIVE="$(basename "$PHP_URL")"
 if ! [ -e "$ARCHIVE" ]; then
   if ! wget --content-disposition "$PHP_URL"; then 
@@ -54,18 +61,23 @@ export CFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 export CXXFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
 ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
 make clean
-./configure --prefix="$PHP_TARGET" --with-config-file-path="$PHP_TARGET/etc" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
+./configure --prefix="$PHP_TARGET" --sbindir="$PHP_TARGET/bin" --with-config-file-path="$PHP_TARGET/etc" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
 make || exit 1 
 make install || exit 1
-cd "$BUILD_PATH" || exit 1
 
 if ! [ -e "$PHP_TARGET/etc/php.ini" ]; then
-  cp "$BUILD_PATH/php.ini-production" "$PHP_TARGET/etc/php.ini"
+  cp 'php.ini-production' "$PHP_TARGET/etc/php.ini"
+  sed -i "s,;opcache.enable=1,opcache.enable=1," "$PHP_TARGET/etc/php.ini"
+  sed -i "s,;opcache.max_accelerated_files=10000,opcache.max_accelerated_files=20000," "$PHP_TARGET/etc/php.ini"
+  sed -i "s,;realpath_cache_size = 4096k,realpath_cache_size = 4096k," "$PHP_TARGET/etc/php.ini"
+  sed -i "s,;realpath_cache_ttl = 120,realpath_cache_ttl = 600," "$PHP_TARGET/etc/php.ini"
+  printf 'zend_extension=opcache.so' >> "$PHP_TARGET/etc/php.ini"
 fi
 
 if ! [ -e "$PHP_TARGET/etc/php-fpm.conf" ]; then
   if [ -e "$PHP_TARGET/etc/php-fpm.conf.default" ]; then
     cp "$PHP_TARGET/etc/php-fpm.conf.default" "$PHP_TARGET/etc/php-fpm.conf"
+    sed -i "s,listen = 127.0.0.1:9000,listen = $VAR_PATH/php-fpm-$PHP_VERSION.sock,g" "$PHP_TARGET/etc/php-fpm.conf"
     sed -i "s,\\[www\\],[www-$PHP_VERSION]," "$PHP_TARGET/etc/php-fpm.conf"
   fi
 fi
