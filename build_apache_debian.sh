@@ -44,11 +44,11 @@ if [ ! -d "$FOLDER" ]; then
 fi
 cd "$FOLDER" || exit 1
 printf "Building HTTPD %s\\n" "$HTTPD_VERSION"
-export CFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
-export CXXFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
-ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
-./configure --prefix=$HTTPD_TARGET --localstatedir=$VAR_PATH --with-port=8000 --enable-ssl --enable-rewrite --enable-so --enable-shared --enable-mime-magic --enable-expires --enable-deflate --enable-mpms-shared
-make || exit 1
+export CFLAGS="-march=native -O3 -ftree-vectorize -fomit-frame-pointer -pipe"
+export CXXFLAGS="-march=native -O3 -ftree-vectorize -fomit-frame-pointer -pipe"
+#ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
+./configure --prefix="$HTTPD_TARGET" --localstatedir="$VAR_PATH" --with-port=8000 --enable-ssl --enable-rewrite --enable-so --enable-shared --enable-mime-magic --enable-expires --enable-deflate --enable-mpms-shared --enable-nonportable-atomics
+make -j4 || exit 1
 make install || exit 1
 cd "$BUILD_PATH" || exit 1
 
@@ -66,7 +66,7 @@ if [ ! -e "$HOME/www/dummy/web/index.php" ]; then
   if [ ! -d "$HOME/www/dummy/web" ]; then
     mkdir -p "$HOME/www/dummy/web"
   fi
-  printf "<?php\nphpinfo();" > "$HOME/www/dummy/web/index.php"
+  printf "<?php\\nphpinfo();" > "$HOME/www/dummy/web/index.php"
 fi
 
 if [ -e "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf" ]; then
@@ -76,9 +76,9 @@ if [ -e "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf" ]; then
 Listen 8000
 <VirtualHost *:8000>
     DocumentRoot "$HOME/www/dummy/web/"
-    ProxyPassMatch ^/(.*\.php(/.*)?)$ unix://$HOME/var/php-fpm-7.1.12.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
-    #ProxyPassMatch ^/(.*\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.6.31.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
-    #ProxyPassMatch ^/(.*\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.4.45.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-7.1.12.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    #ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.6.31.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    #ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.4.45.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
     <Directory $HOME/www/dummy/web/>
       Options Indexes FollowSymLinks MultiViews
       AllowOverride all 

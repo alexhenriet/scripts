@@ -57,12 +57,12 @@ if [ ! -d "$FOLDER" ]; then
 fi
 cd "$FOLDER" || exit 1
 printf "Building PHP %s\\n" "$PHP_VERSION"
-export CFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
-export CXXFLAGS="-march=native -O2 -fomit-frame-pointer -pipe"
+export CFLAGS="-march=native -O3 -fomit-frame-pointer -pipe"
+export CXXFLAGS="-march=native -O3 -fomit-frame-pointer -pipe"
 ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
 make clean
 ./configure --prefix="$PHP_TARGET" --sbindir="$PHP_TARGET/bin" --with-config-file-path="$PHP_TARGET/etc" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
-make || exit 1 
+make -j4 || exit 1 
 make install || exit 1
 
 if ! [ -e "$PHP_TARGET/etc/php.ini" ]; then
