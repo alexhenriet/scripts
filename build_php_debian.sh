@@ -1,5 +1,12 @@
 #!/bin/sh
 # validated against https://www.shellcheck.net/
+##
+# Build optional libsodium via
+# cd /tmp && wget https://download.libsodium.org/libsodium/releases/LATEST.tar.gz
+# tar zxf LATEST.tar.gz && cd libsodium-stable
+# ./configure && make && sudo make checkinstall (set correct version number)
+# sudo dpkg -i sudo dpkg -i libsodium_(correct version number)_amd64.deb
+# bash build_php_debian.sh --with-sodium
 
 DEFAULT_PHP_VERSION="7.2.0"
 BUILD_PATH="$HOME/httpd-build"
