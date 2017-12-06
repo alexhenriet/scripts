@@ -1,11 +1,15 @@
 #!/bin/sh
 # validated against https://www.shellcheck.net/
-# todo: libsodium for PHP > 7
 
 DEFAULT_PHP_VERSION="7.2.0"
 BUILD_PATH="$HOME/httpd-build"
 VAR_PATH="$HOME/var"
 MYSQL_SOCK_PATH="/var/run/mysqld/mysqld.sock"
+
+PARAMS=''
+if ! [ -z "$1" ]; then
+    PARAMS="$1"
+fi
 
 # Requirements check
 REQUIRED_PACKAGES='tar bzip2 gcc g++ make sed dpkg-dev libfcgi-dev libfcgi0ldbl libjpeg62-turbo-dbg libmcrypt-dev libssl-dev libc-client2007e-dev libxml2-dev libbz2-dev libcurl4-openssl-dev libjpeg-dev libpng12-dev libfreetype6-dev libkrb5-dev libpq-dev libxml2-dev libxslt1-dev libicu-dev libpcre3-dev zlib1g-dev libldap2-dev libreadline-dev libldb-dev'
@@ -61,8 +65,8 @@ printf "Building PHP %s\\n" "$PHP_VERSION"
 export CFLAGS="-march=native -O3 -fomit-frame-pointer -pipe"
 export CXXFLAGS="-march=native -O3 -fomit-frame-pointer -pipe"
 ARCH="$(dpkg-architecture -q DEB_BUILD_GNU_TYPE)"
-#make clean
-./configure --prefix="$PHP_TARGET" --sbindir="$PHP_TARGET/bin" --with-config-file-path="$PHP_TARGET/etc" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache
+make clean
+./configure --prefix="$PHP_TARGET" --sbindir="$PHP_TARGET/bin" --with-config-file-path="$PHP_TARGET/etc" --with-libdir="lib/$ARCH" --localstatedir="$VAR_PATH" --with-mysql-sock="$MYSQL_SOCK_PATH" --disable-cgi --with-mysqli=mysqlnd --enable-pdo --with-pdo-mysql=mysqlnd --with-openssl --with-zlib --with-pcre-regex --with-sqlite3 --with-gd --with-ldap --with-curl --with-fpm-group="$USER" --with-fpm-user="$USER" --with-gettext --with-mhash --with-xmlrpc --with-bz2 --with-readline --enable-inline-optimization --enable-calendar --enable-bcmath --enable-exif --enable-mbregex --enable-sysvshm --enable-sysvsem --enable-sockets --enable-soap --enable-sockets --enable-ftp --enable-bcmath --enable-intl --enable-mbstring --enable-zip --enable-fpm --enable-opcache $PARAMS
 make -j4 || exit 1 
 make install || exit 1
 
