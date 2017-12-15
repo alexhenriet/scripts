@@ -19,7 +19,12 @@ if ! [ -z "$1" ]; then
 fi
 
 # Requirements check
+DEBIAN_VERSION=$(sed 's/\..*//' /etc/debian_version)
+if [ "$DEBIAN_VERSION" -eq "9" ]; then
+REQUIRED_PACKAGES='tar bzip2 gcc g++ make sed dpkg-dev libfcgi-dev libfcgi0ldbl libjpeg62-turbo-dev libmcrypt-dev libssl-dev libc-client2007e-dev libxml2-dev libbz2-dev libcurl4-openssl-dev libjpeg-dev libpng-dev libfreetype6-dev libkrb5-dev libpq-dev libxml2-dev libxslt1-dev libicu-dev libpcre3-dev zlib1g-dev libldap2-dev libreadline-dev libldb-dev'
+else
 REQUIRED_PACKAGES='tar bzip2 gcc g++ make sed dpkg-dev libfcgi-dev libfcgi0ldbl libjpeg62-turbo-dbg libmcrypt-dev libssl-dev libc-client2007e-dev libxml2-dev libbz2-dev libcurl4-openssl-dev libjpeg-dev libpng12-dev libfreetype6-dev libkrb5-dev libpq-dev libxml2-dev libxslt1-dev libicu-dev libpcre3-dev zlib1g-dev libldap2-dev libreadline-dev libldb-dev'
+fi
 MISSING_PACKAGES=''
 for PACKAGE in $REQUIRED_PACKAGES; do
   if ! dpkg -s "$PACKAGE" > /dev/null 2>&1; then
