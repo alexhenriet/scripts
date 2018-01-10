@@ -8,7 +8,7 @@
 # sudo dpkg -i sudo dpkg -i libsodium_(correct version number)_amd64.deb
 # bash build_php_debian.sh --with-sodium
 
-DEFAULT_PHP_VERSION="7.2.0"
+DEFAULT_PHP_VERSION="7.2.1"
 BUILD_PATH="$HOME/httpd-build"
 VAR_PATH="$HOME/var"
 MYSQL_SOCK_PATH="/var/run/mysqld/mysqld.sock"
@@ -59,16 +59,16 @@ if [ -e "$PHP_TARGET/bin/php" ]; then
   printf "Error: PHP version %s already installed at %s\\n" "$PHP_VERSION" "$PHP_TARGET" && exit 1
 fi
 
-PHP_URL="http://be2.php.net/distributions/php-$PHP_VERSION.tar.bz2"
+PHP_URL="http://fr.php.net/distributions/php-$PHP_VERSION.tar.xz"
 ARCHIVE="$(basename "$PHP_URL")"
 if ! [ -e "$ARCHIVE" ]; then
   if ! wget --content-disposition "$PHP_URL"; then 
     printf "Error: unable to download PHP version %s\\n" "$PHP_VERSION" && exit 1
   fi
 fi
-FOLDER="$(basename "$ARCHIVE" .tar.bz2)"
+FOLDER="$(basename "$ARCHIVE" .tar.xz)"
 if [ ! -d "$FOLDER" ]; then
-  if ! tar jxf "$ARCHIVE"; then 
+  if ! tar Jxf "$ARCHIVE"; then 
     printf "Error: unable to extract archive %s\\n" "$ARCHIVE" && exit 1
   fi
 fi
