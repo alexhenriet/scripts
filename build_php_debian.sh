@@ -8,7 +8,7 @@
 # sudo dpkg -i sudo dpkg -i libsodium_(correct version number)_amd64.deb
 # bash build_php_debian.sh --with-sodium
 
-DEFAULT_PHP_VERSION="7.2.2"
+DEFAULT_PHP_VERSION="7.2.3"
 BUILD_PATH="$HOME/httpd-build"
 VAR_PATH="$HOME/var"
 MYSQL_SOCK_PATH="/var/run/mysqld/mysqld.sock"
