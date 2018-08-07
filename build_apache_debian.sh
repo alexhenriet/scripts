@@ -18,7 +18,7 @@ if [ "${#MISSING_PACKAGES}" -ne 0 ]; then
 fi
 
 # Script
-HTTPD_VERSION="2.4.29"
+HTTPD_VERSION="2.4.34"
 
 HTTPD_TARGET="$HOME/httpd-$HTTPD_VERSION"
 if [ -e "$HTTPD_TARGET/bin/httpd" ]; then
@@ -76,7 +76,7 @@ if [ -e "$HTTPD_TARGET/conf/extra/httpd-vhosts.conf" ]; then
 Listen 8000
 <VirtualHost *:8000>
     DocumentRoot "$HOME/www/dummy/web/"
-    ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-7.1.12.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
+    ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-7.2.8.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
     #ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.6.31.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
     #ProxyPassMatch ^/(.*\\.php(/.*)?)$ unix://$HOME/var/php-fpm-5.4.45.sock|fcgi://127.0.0.1:9000$HOME/www/dummy/web/
     <Directory $HOME/www/dummy/web/>
