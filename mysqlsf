@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# validated against https://www.shellcheck.net/
+
+ME=$(basename "$0")
+
+if [ -z "$1" ]; then
+  echo "Syntax: $ME path/to/app/config/parameters_xxx.yml" && exit 1
+fi
+
+HOST=$(grep database_host "$1" | cut -d: -f2| xargs)
+PORT=$(grep database_port "$1" | cut -d: -f2| xargs)
+NAME=$(grep database_name "$1" | cut -d: -f2| xargs)
+USER=$(grep database_user "$1" | cut -d: -f2| xargs)
+PASS=$(grep database_password "$1" | cut -d: -f2| xargs)
+
+if [[ -z "$HOST" || -z "$PORT" || -z "$NAME" || -z "$USER" || -z "$PASS" ]]; then
+  echo "Failed parsing $0" && exit 1
+fi
+
+mysql -h"$HOST" -P"$PORT" -u"$USER" -p"$PASS" "$NAME"
+exit 0
